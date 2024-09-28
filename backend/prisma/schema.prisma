@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id          Int       @id       @default(autoincrement())
+  username    String    @unique
+  name        String
+  password    String
+  Profile     Profile?
+  swipes      Swipe[]  @relation("UserSwipes")
+  swipedBy    Swipe[]  @relation("SwipedByUsers")
+
+  match1      Match[]  @relation("userOne")
+  match2      Match[]  @relation("userTwo")
+
+}
+
+model Profile {
+  id          Int       @id       @default(autoincrement())
+  userId      Int       @unique
+  bio         String   
+  private     Boolean   @default(false)
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Swipe {
+  id          Int       @id       @default(autoincrement())
+  fromUserId  Int       // The user who swiped
+  toUserId    Int       // The user being swiped on
+  like        Boolean   // True for right swipe (like), false for left swipe (dislike)
+  
+  fromUser    User      @relation("UserSwipes", fields: [fromUserId], references: [id])
+  toUser      User      @relation("SwipedByUsers", fields: [toUserId], references: [id])
+
+  // @@unique([fromUserId, toUserId]) // A user can swipe on another only once
+}
+model Match {
+  id          Int    @id     @default(autoincrement())
+  userOneId   Int 
+  userTwoId   Int
+
+  userOne    User      @relation("userOne", fields: [userOneId], references: [id])
+  userTwo    User      @relation("userTwo", fields: [userTwoId], references: [id])
+
+}
